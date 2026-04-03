@@ -12,7 +12,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
+
+
 @Configuration
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -28,9 +31,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/auth/login",
                                 "/auth/register",
-                                "/auth/test-token",
                                 "/error",
-                                "/products"
+                                "/products",
+                                "/exchange-rates"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

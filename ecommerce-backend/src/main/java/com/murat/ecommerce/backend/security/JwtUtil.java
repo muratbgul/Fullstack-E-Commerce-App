@@ -11,39 +11,42 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
+
+/**
+ * JWT (JSON Web Token) üretmek ve doğrulamak için kullanılan yardımcı sınıf.
+ */
+
 @Component
 public class JwtUtil {
 
-    // NOTE: In real projects, store this in env/config (not in source code).
     private final String secret = "CHANGE_ME_TO_A_LONG_RANDOM_SECRET_KEY_AT_LEAST_32_CHARS";
 
     private Key signingKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email) {
+    // 24 saat geçerli bir token üretir
+    public String generateToken(String email, String role) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour
+        Date expiry = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
         return Jwts.builder()
                 .setSubject(email)
+                .claim("role", role)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(signingKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    /**
-     * @return email (subject) if token is valid; otherwise null
-     */
-    public String validateAndGetEmail(String token) {
+    // Token geçerliyse içindeki bilgileri (claims) döner
+    public Claims validateAndGetClaims(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
+            return Jwts.parserBuilder()
                     .setSigningKey(signingKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.getSubject();
         } catch (JwtException | IllegalArgumentException e) {
             return null;
         }

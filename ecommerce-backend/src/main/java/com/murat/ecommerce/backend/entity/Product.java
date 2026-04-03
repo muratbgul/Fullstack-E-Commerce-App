@@ -2,6 +2,7 @@ package com.murat.ecommerce.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -18,6 +19,9 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+
     @Column(nullable = false)
-    private Double price;
+    private Integer stock = 0; // Stok miktarı eklendi
 }

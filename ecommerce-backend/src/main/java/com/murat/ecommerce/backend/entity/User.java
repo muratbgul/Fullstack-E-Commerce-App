@@ -12,6 +12,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.math.BigDecimal;
+
+
 
 @Getter
 @Setter
@@ -34,4 +37,23 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "address")
+    private String address;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "segment")
+    private Segment segment = Segment.BRONZE;
+
+    @Column(name = "total_spent", precision = 10, scale = 2)
+    private BigDecimal totalSpent = BigDecimal.ZERO;
+
+    @Column(name = "status", nullable = false)
+    private String status = "ACTIVE";
 }
