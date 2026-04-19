@@ -1,0 +1,23 @@
+# IDEs
+.idea/
+.vscode/
+
+# Environment Variables
+.env
+*.env
+# Ignore logs
+ecommerce-backend/logs/
+ecommerce-frontend/logs/
+logs/
+*.log
+
+# Front-end Ignore
+node_modules/
+build/
+dist/
+.DS_Store
+
+# Back-end Ignore
+target/
+*.jar
+*.war
