@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import Navbar from '../Navbar';
+import { decodeToken } from '../utils/authUtils';
 import { 
   CreditCard, 
   ChevronRight, 
@@ -14,6 +16,7 @@ import {
 import { useCart } from '../context/CartContext';
 import confetti from 'canvas-confetti';
 import './CheckoutPage.css';
+import { buildApiUrl } from '../utils/apiUtils';
 
 const CheckoutPage = () => {
   const { cartItems, clearCart, totalPrice } = useCart();
@@ -22,6 +25,7 @@ const CheckoutPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [email, setEmail] = useState('');
 
   const [cardData, setCardData] = useState({
     cardHolderName: '',
@@ -45,7 +49,12 @@ const CheckoutPage = () => {
     const token = localStorage.getItem('token');
     if (!token) { setProfileLoading(false); return; }
 
-    fetch('http://localhost:8081/users/me', {
+    const decoded = decodeToken(token);
+    if (decoded) {
+      setEmail(decoded.email);
+    }
+
+    fetch(buildApiUrl('/users/me'), {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.ok ? res.json() : null)
@@ -134,7 +143,7 @@ const CheckoutPage = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:8081/orders', {
+      const response = await fetch(buildApiUrl('/orders'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -169,7 +178,9 @@ const CheckoutPage = () => {
 
   if (cartItems.length === 0 && !success) {
     return (
-      <div className="empty-cart-container" style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <div>
+        <Navbar email={email} />
+        <div className="empty-cart-container" style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ textAlign: 'center' }}>
           <ShoppingBag size={80} color="#e5e7eb" style={{ marginBottom: '1rem' }} />
           <h2 className="section-title">Your Cart is Empty</h2>
@@ -178,12 +189,15 @@ const CheckoutPage = () => {
             Start Shopping
           </button>
         </motion.div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="checkout-container">
+    <div>
+      <Navbar email={email} />
+      <div className="checkout-container">
       <motion.button 
         whileHover={{ x: -4 }}
         onClick={() => navigate('/cart')}
@@ -496,6 +510,7 @@ const CheckoutPage = () => {
             </div>
           </form>
         </motion.div>
+      </div>
       </div>
     </div>
   );

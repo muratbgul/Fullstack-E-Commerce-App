@@ -15,7 +15,7 @@ export default function AdminUsers() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const data = await fetchWithAuth('http://localhost:8081/users/admin');
+      const data = await fetchWithAuth('/users/admin');
       setUsers(data);
     } catch (err) {
       setError(err.message);
@@ -26,28 +26,28 @@ export default function AdminUsers() {
 
   const handleRoleToggle = async (email, currentRole) => {
     const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN';
-    if (!window.confirm(`${email} kullanıcısının rolü ${newRole} olarak değiştirilsin mi?`)) return;
+    if (!window.confirm(`Change role of user ${email} to ${newRole}?`)) return;
 
     try {
-      await fetchWithAuth(`http://localhost:8081/users/${email}/role`, {
+      await fetchWithAuth(`/users/${email}/role`, {
         method: 'PUT',
         body: JSON.stringify({ role: newRole })
       });
       loadUsers();
     } catch (err) {
-      alert('Rol güncellenirken hata: ' + err.message);
+      alert('Error updating role: ' + err.message);
     }
   };
 
   const handleDeleteUser = async (email) => {
-    if (!window.confirm(`${email} kullanıcısını silmek istediğinize emin misiniz?`)) return;
+    if (!window.confirm(`Are you sure you want to delete user ${email}?`)) return;
     try {
-      await fetchWithAuth(`http://localhost:8081/users/${email}`, {
+      await fetchWithAuth(`/users/${email}`, {
         method: 'DELETE'
       });
       loadUsers();
     } catch (err) {
-      alert('Kullanıcı silinirken hata: ' + err.message);
+      alert('Error deleting user: ' + err.message);
     }
   };
 

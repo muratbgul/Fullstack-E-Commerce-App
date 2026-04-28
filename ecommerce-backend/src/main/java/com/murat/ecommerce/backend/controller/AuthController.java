@@ -6,7 +6,6 @@ import com.murat.ecommerce.backend.security.JwtUtil;
 import com.murat.ecommerce.backend.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,7 +18,6 @@ import java.util.Map;
 
 
 
-@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -39,7 +37,7 @@ public class AuthController {
         String token = jwtUtil.generateToken(dto.getEmail(), user.getRole().name());
         return ResponseEntity.status(HttpStatus.OK).body(
                 Map.of(
-                        "message", "Giriş başarılı",
+                        "message", "Login successful",
                         "token", token
                 )
         );
@@ -48,7 +46,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequestDTO dto) {
         userService.register(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Kayıt başarılı"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Registration successful"));
     }
 }
 

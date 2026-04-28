@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import Navbar from '../Navbar';
+import { buildApiUrl } from '../utils/apiUtils';
 
 function getEmailFromToken(token) {
   try {
@@ -27,11 +28,11 @@ export default function OrdersPage() {
 
     if (userEmail) {
       setLoading(true);
-      fetch('http://localhost:8081/orders', {
+      fetch(buildApiUrl('/orders'), {
         headers: { 'Authorization': `Bearer ${storedToken}` }
       })
         .then(res => {
-          if (!res.ok) throw new Error('Siparişler getirilemedi');
+          if (!res.ok) throw new Error('Could not fetch orders');
           return res.json();
         })
         .then(data => {
@@ -39,7 +40,7 @@ export default function OrdersPage() {
           setLoading(false);
         })
         .catch(err => {
-          console.error("Siparişler yüklenirken hata:", err);
+          console.error("Error loading orders:", err);
           setLoading(false);
         });
     } else {
@@ -52,21 +53,21 @@ export default function OrdersPage() {
   }, []);
 
   const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Bu siparişi iptal etmek istediğinizden emin misiniz?")) return;
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
 
     const storedToken = localStorage.getItem('token') || '';
     try {
-      const response = await fetch(`http://localhost:8081/orders/${orderId}/cancel`, {
+      const response = await fetch(buildApiUrl(`/orders/${orderId}/cancel`), {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${storedToken}` }
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Sipariş iptal edilemedi");
+        throw new Error(errorData.message || "Order could not be canceled");
       }
       fetchOrders();
     } catch (err) {
-      alert("Hata: " + err.message);
+      alert("Error: " + err.message);
     }
   };
 
@@ -84,15 +85,15 @@ export default function OrdersPage() {
   const handleReturnRequest = async (orderId) => {
     const itemsToReturn = selectedItems[orderId] || [];
     if (itemsToReturn.length === 0) {
-      alert("Lütfen iade etmek istediğiniz en az bir ürünü seçin.");
+      alert("Please select at least one item to return.");
       return;
     }
 
-    if (!window.confirm(`Seçili ${itemsToReturn.length} ürün için iade talebi oluşturmak istediğinizden emin misiniz?`)) return;
+    if (!window.confirm(`Are you sure you want to request a return for the selected ${itemsToReturn.length} items?`)) return;
     
     const storedToken = localStorage.getItem('token') || '';
     try {
-      const response = await fetch(`http://localhost:8081/orders/${orderId}/request-return`, {
+      const response = await fetch(buildApiUrl(`/orders/${orderId}/request-return`), {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${storedToken}`,
@@ -108,7 +109,7 @@ export default function OrdersPage() {
       setSelectedItems(prev => ({ ...prev, [orderId]: [] }));
       fetchOrders();
     } catch (err) {
-      alert("Hata: " + err.message);
+      alert("Error: " + err.message);
     }
   };
 

@@ -29,7 +29,7 @@ public class UserService {
 
     public void register(RegisterRequestDTO dto) {
         if (userRepository.existsByEmailAndStatus(dto.getEmail(), "ACTIVE")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bu e-posta zaten kullanımda");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This email is already in use");
         }
 
         User user = new User();
@@ -42,11 +42,11 @@ public class UserService {
 
     public void login(LoginRequestDTO dto) {
         User user = userRepository.findByEmailAndStatus(dto.getEmail(), "ACTIVE")
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         boolean passwordMatches = passwordEncoder.matches(dto.getPassword(), user.getPassword());
         if (!passwordMatches) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hatalı şifre");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid password");
         }
     }
 
@@ -60,12 +60,12 @@ public class UserService {
 
     public User getUserByEmail(String email) {
         return userRepository.findByEmailAndStatus(email, "ACTIVE")
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
     public User updateUserByEmail(String email, User updatedData) {
         User existingUser = userRepository.findByEmailAndStatus(email, "ACTIVE")
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         
         existingUser.setName(updatedData.getName());
         existingUser.setSurname(updatedData.getSurname());
@@ -77,7 +77,7 @@ public class UserService {
 
     public void addSpentAmount(String email, BigDecimal amount) {
         User user = userRepository.findByEmailAndStatus(email, "ACTIVE")
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         
         BigDecimal currentSpent = user.getTotalSpent() != null ? user.getTotalSpent() : BigDecimal.ZERO;
         user.setTotalSpent(currentSpent.add(amount));
@@ -87,7 +87,7 @@ public class UserService {
 
     public void subtractSpentAmount(String email, BigDecimal amount) {
         User user = userRepository.findByEmailAndStatus(email, "ACTIVE")
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         
         BigDecimal currentSpent = user.getTotalSpent() != null ? user.getTotalSpent() : BigDecimal.ZERO;
         user.setTotalSpent(currentSpent.subtract(amount).max(BigDecimal.ZERO));
@@ -110,14 +110,14 @@ public class UserService {
 
     public User updateUserRole(String email, Role newRole) {
         User user = userRepository.findByEmailAndStatus(email, "ACTIVE")
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         user.setRole(newRole);
         return userRepository.save(user);
     }
 
     public void deleteUser(String email) {
         User user = userRepository.findByEmailAndStatus(email, "ACTIVE")
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kullanıcı bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         user.setStatus("DELETED");
         userRepository.save(user);
     }

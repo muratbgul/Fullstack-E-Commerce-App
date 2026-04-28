@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import Navbar from '../Navbar';
 import { getEmailFromToken } from '../utils/authUtils';
+import { buildApiUrl } from '../utils/apiUtils';
 
 
 
@@ -25,7 +26,7 @@ export default function ProfilePage() {
     const storedToken = localStorage.getItem('token') || '';
     setEmail(getEmailFromToken(storedToken));
 
-    fetch('http://localhost:8081/users/me', {
+    fetch(buildApiUrl('/users/me'), {
       headers: {
         'Authorization': `Bearer ${storedToken}`
       }
@@ -64,7 +65,7 @@ export default function ProfilePage() {
     setSaving(true);
     const storedToken = localStorage.getItem('token') || '';
 
-    fetch('http://localhost:8081/users/me', {
+    fetch(buildApiUrl('/users/me'), {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${storedToken}`,
@@ -89,7 +90,7 @@ export default function ProfilePage() {
           phone: data.phone || '',
           address: data.address || ''
         }));
-        setToast('Profil başarıyla güncellendi!');
+        setToast('Profile updated successfully!');
         setTimeout(() => setToast(null), 3000);
       })
       .catch(err => setError(err.message))

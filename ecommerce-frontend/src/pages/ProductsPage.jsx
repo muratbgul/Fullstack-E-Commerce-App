@@ -29,7 +29,7 @@ export default function ProductsPage() {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const data = await fetchWithAuth('http://localhost:8081/products');
+      const data = await fetchWithAuth('/products');
       setProducts(data);
     } catch (err) {
       setError(err.message);

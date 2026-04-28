@@ -22,20 +22,20 @@ public class OrderNotificationListener {
         Order order = event.getOrder();
         
         log.info("********** BİLDİRİM SİSTEMİ: MAİL GÖNDERİMİ BAŞLADI **********");
-        log.info("Sipariş ID: {} için konfirme e-postası hazırlanıyor...", order.getId());
+        log.info("Preparing confirmation email for Order ID: {}...", order.getId());
         
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom("no-reply@muratecommerce.com");
             message.setTo(order.getUserEmail());
-            message.setSubject("Sipariş Onaylandı - #" + order.getId());
+            message.setSubject("Order Confirmed - #" + order.getId());
             
             String emailBody = String.format(
                 "Merhaba %s %s,\n\n" +
-                "Siparişiniz başarıyla alınmıştır ve ödemesi onaylanmıştır.\n\n" +
-                "Sipariş Detayları:\n" +
+                "Your order has been successfully received and payment is confirmed.\n\n" +
+                "Order Details:\n" +
                 "--------------------------\n" +
-                "Sipariş ID: %d\n" +
+                "Order ID: %d\n" +
                 "Toplam Tutar: %.2f TRY\n" +
                 "Teslimat Adresi: %s\n" +
                 "--------------------------\n\n" +
@@ -49,11 +49,11 @@ public class OrderNotificationListener {
             
             mailSender.send(message);
             
-            log.info("Sipariş Onay Maili başarıyla gönderildi: {}", order.getUserEmail());
+            log.info("Order Confirmation Email sent successfully: {}", order.getUserEmail());
             log.info("*************************************************");
             
         } catch (Exception e) {
-            log.error("Mail gönderim hatası (Sipariş ID: {}): {}", order.getId(), e.getMessage());
+            log.error("Email sending error (Order ID: {}): {}", order.getId(), e.getMessage());
         }
     }
 }

@@ -15,7 +15,7 @@ export function decodeToken(token) {
             role: payload?.role || 'USER'
         };
     } catch (error) {
-        console.error('Token çözülürken hata oluştu:', error);
+        console.error('Error decoding token:', error);
         return null;
     }
 }

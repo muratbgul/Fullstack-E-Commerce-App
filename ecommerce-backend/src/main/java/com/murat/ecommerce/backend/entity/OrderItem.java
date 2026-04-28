@@ -22,13 +22,13 @@ public class OrderItem {
     private Integer quantity;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal priceAtOrder; // Sipariş anındaki fiyatı saklıyoruz
+    private BigDecimal priceAtOrder; // Saving the price at the time of order
 
     @Column(name = "product_name_at_order")
-    private String productNameAtOrder; // Sipariş anındaki ürün adını saklıyoruz (Veri bütünlüğü için)
+    private String productNameAtOrder; // Saving the product name at the time of order (For data integrity)
 
     @Column(name = "status")
-    private String status = "PAID"; // Varsayılan durum: ÖDENDİ (PAID, REFUNDED)
+    private String status = "PAID"; // Default status: PAID (PAID, REFUNDED)
 
     @Column(name = "payment_transaction_id")
     private String paymentTransactionId;
@@ -44,7 +44,7 @@ public class OrderItem {
     private Order order;
 
     /**
-     * Frontend için ürün adını döndürür.
+     * Returns the product name for the frontend.
      */
     @JsonProperty("productName")
     public String getProductName() {

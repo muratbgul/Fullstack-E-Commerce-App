@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from './context/CartContext';
 import { decodeToken } from './utils/authUtils';
+import { buildApiUrl } from './utils/apiUtils';
 
 export default function Navbar({ email }) {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function Navbar({ email }) {
       setRole(decoded.role);
     }
 
-    fetch('http://localhost:8081/exchange-rates')
+    fetch(buildApiUrl('/exchange-rates'))
       .then(res => res.json())
       .then(data => setExchangeRates(data))
       .catch(err => console.error("Could not fetch exchange rates:", err));

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { buildApiUrl } from './utils/apiUtils';
 
-const LOGIN_API = 'http://localhost:8081/auth/login';
+const LOGIN_API = buildApiUrl('/auth/login');
 
 
 
@@ -34,7 +35,7 @@ function Login() {
         return;
       }
 
-      let message = `Hata ${response.status}`;
+      let message = `Error ${response.status}`;
       try {
         const contentType = response.headers.get('content-type') || '';
         if (contentType.includes('application/json')) {

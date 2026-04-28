@@ -15,7 +15,7 @@ export default function AdminOrders() {
   const loadOrders = async () => {
     try {
       setLoading(true);
-      const data = await fetchWithAuth('http://localhost:8081/orders/admin');
+      const data = await fetchWithAuth('/orders/admin');
       setOrders(data);
     } catch (err) {
       setError(err.message);
@@ -39,29 +39,29 @@ export default function AdminOrders() {
     const currentStatus = order?.status || 'PENDING';
 
     if (statusRank[newStatus] < statusRank[currentStatus]) {
-      alert(`Sipariş durumunu '${currentStatus}' halinden '${newStatus}' haline geri döndüremezsiniz.`);
+      alert(`You cannot revert order status from '${currentStatus}' to '${newStatus}'.`);
       return;
     }
 
     try {
-      await fetchWithAuth(`http://localhost:8081/orders/${id}/status?status=${newStatus}`, {
+      await fetchWithAuth(`/orders/${id}/status?status=${newStatus}`, {
         method: 'PUT'
       });
       loadOrders();
     } catch (err) {
-      alert('Durum güncellenirken hata oluştu: ' + err.message);
+      alert('Error updating status: ' + err.message);
     }
   };
 
   const handlePartialRefund = async (itemId) => {
-    if (!window.confirm("Bu ürünü iade etmek istediğinizden emin misiniz? (Para iadesi gerçekleşecektir)")) return;
+    if (!window.confirm("Are you sure you want to return this item? (A refund will be processed)")) return;
     try {
-      await fetchWithAuth(`http://localhost:8081/orders/items/${itemId}/refund`, {
+      await fetchWithAuth(`/orders/items/${itemId}/refund`, {
         method: 'PUT'
       });
       loadOrders();
     } catch (err) {
-      alert('Ürün iade edilirken hata: ' + err.message);
+      alert('Error returning item: ' + err.message);
     }
   };
 

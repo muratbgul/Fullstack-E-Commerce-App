@@ -20,7 +20,7 @@ export default function AdminProducts() {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const data = await fetchWithAuth('http://localhost:8081/products/admin');
+      const data = await fetchWithAuth('/products/admin');
       setProducts(data);
     } catch (err) {
       setError(err.message);
@@ -47,12 +47,12 @@ export default function AdminProducts() {
     e.preventDefault();
     try {
       if (editMode) {
-        await fetchWithAuth(`http://localhost:8081/products/${currentProductId}`, {
+        await fetchWithAuth(`/products/${currentProductId}`, {
           method: 'PUT',
           body: JSON.stringify(formData)
         });
       } else {
-        await fetchWithAuth('http://localhost:8081/products', {
+        await fetchWithAuth('/products', {
           method: 'POST',
           body: JSON.stringify(formData)
         });
@@ -60,19 +60,19 @@ export default function AdminProducts() {
       resetForm();
       loadProducts();
     } catch (err) {
-      alert('Ürün kaydedilirken hata: ' + err.message);
+      alert('Error saving product: ' + err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
-      await fetchWithAuth(`http://localhost:8081/products/${id}`, {
+      await fetchWithAuth(`/products/${id}`, {
         method: 'DELETE'
       });
       loadProducts();
     } catch (err) {
-      alert('Ürün silinirken hata: ' + err.message);
+      alert('Error deleting product: ' + err.message);
     }
   };
 

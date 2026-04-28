@@ -38,7 +38,7 @@ public class OrderService {
     @Transactional
     public Order createOrder(OrderRequestDTO request, String email) {
         if (request.getItems() == null || request.getItems().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sipariş en az bir ürün içermelidir.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order must contain at least one item.");
         }
 
         User user = userService.getUserByEmail(email);
@@ -53,11 +53,11 @@ public class OrderService {
         for (OrderRequestDTO.OrderItemRequestDTO itemDTO : request.getItems()) {
             Product product = productRepository.findById(itemDTO.getProductId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Ürün bulunamadı: " + itemDTO.getProductId()));
+                            "Product not found: " + itemDTO.getProductId()));
 
             if (product.getStock() < itemDTO.getQuantity()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Yetersiz stok: " + product.getName() + " (Mevcut: " + product.getStock() + ")");
+                        "Insufficient stock: " + product.getName() + " (Available: " + product.getStock() + ")");
             }
 
             product.setStock(product.getStock() - itemDTO.getQuantity());
@@ -89,10 +89,10 @@ public class OrderService {
         }
 
         if (request.getPaymentCard() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ödeme bilgileri eksik.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment information is missing.");
         }
 
-        log.info("Sipariş için ödeme işlemi başlatılıyor...");
+        log.info("Initiating payment process for order...");
 
         try {
             Payment payment = iyzicoPaymentService.processPayment(
@@ -103,8 +103,8 @@ public class OrderService {
                     request.getBuyerInfo());
 
             if (!"success".equals(payment.getStatus())) {
-                log.error("Ödeme başarısız: {}, Kullanıcı: {}", payment.getErrorMessage(), email);
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ödeme hatası: " + payment.getErrorMessage());
+                log.error("Payment failed: {}, User: {}", payment.getErrorMessage(), email);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment error: " + payment.getErrorMessage());
             }
 
             order.setStatus("PENDING");
@@ -125,7 +125,7 @@ public class OrderService {
 
             userService.addSpentAmount(email, order.getTotalPrice());
 
-            log.info("Sipariş ve ödeme başarıyla tamamlandı. Order ID: {}", savedOrder.getId());
+            log.info("Order and payment completed successfully. Order ID: {}", savedOrder.getId());
 
             eventPublisher.publishEvent(new OrderCreatedEvent(savedOrder));
 
@@ -134,8 +134,8 @@ public class OrderService {
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Sipariş oluşturma sırasında beklenmedik hata", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Sistem hatası: " + e.getMessage());
+            log.error("Unexpected error during order creation", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "System error: " + e.getMessage());
         }
     }
 
@@ -149,10 +149,10 @@ public class OrderService {
     @Transactional
     public Order cancelOrder(Long id, String email, boolean isAdmin) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sipariş bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         if (!isAdmin && !order.getUserEmail().equals(email)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu işlem için yetkiniz yok.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission for this action.");
         }
 
         if ("CANCELLED".equals(order.getStatus())) {
@@ -161,22 +161,21 @@ public class OrderService {
 
         if (!isAdmin && !"PENDING".equals(order.getStatus())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Sadece beklemedeki (PENDING) siparişler iptal edilebilir.");
+                    "Only pending orders can be canceled.");
         }
 
         if (order.getPaymentId() != null && !order.getPaymentId().isEmpty()) {
             com.iyzipay.model.Cancel iyzicoCancel = iyzicoPaymentService.cancelPayment(order.getPaymentId());
 
             if (!"success".equals(iyzicoCancel.getStatus())) {
-                // Not: "Tutar iade edilmiş" veya "zaten iptal edilmiş" gibi durumlar da error
-                // dönebilir,
-                // onları burada spesifik yönetebilirsin. Şimdilik hata fırlatıyoruz.
+                // Note: Cases like "Amount refunded" or "already canceled" may also return error,
+                // you can manage them specifically here. We are throwing an error for now.
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Iyzico iptal hatası: " + iyzicoCancel.getErrorMessage());
+                        "Iyzico cancellation error: " + iyzicoCancel.getErrorMessage());
             }
         }
 
-        // Stoğu geri yükle
+        // Restore stock
         for (OrderItem item : order.getItems()) {
             Product product = item.getProduct();
             if (product != null) {
@@ -203,7 +202,7 @@ public class OrderService {
         }
 
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sipariş bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         order.setStatus(status);
         return orderRepository.save(order);
@@ -212,20 +211,20 @@ public class OrderService {
     @Transactional
     public Order requestReturn(Long id, String email, List<Long> itemIds) {
         if (itemIds == null || itemIds.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "İade edilecek en az bir ürün seçilmelidir.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one item must be selected for return.");
         }
 
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sipariş bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         if (!order.getUserEmail().equals(email)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Bu sipariş size ait değil.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This order does not belong to you.");
         }
 
         if (!"DELIVERED".equalsIgnoreCase(order.getStatus())
                 && !"PARTIALLY_REFUNDED".equalsIgnoreCase(order.getStatus())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Sadece teslim edilmiş siparişler için iade talebi oluşturulabilir.");
+                    "Return requests can only be created for delivered orders.");
         }
 
         boolean updatedAny = false;
@@ -237,7 +236,7 @@ public class OrderService {
         }
 
         if (!updatedAny) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "İade edilebilir bir ürün seçilmedi.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No eligible item for return was selected.");
         }
 
         return orderRepository.save(order);
@@ -246,10 +245,10 @@ public class OrderService {
     @Transactional
     public Order approveReturn(Long id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sipariş bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         if (!"RETURN_REQUESTED".equalsIgnoreCase(order.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "İade edilecek bir talep bulunamadı.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No return request found.");
         }
 
         for (OrderItem item : order.getItems()) {
@@ -260,7 +259,7 @@ public class OrderService {
 
                 if (!"success".equals(iyzicoRefund.getStatus())) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                            "Iyzico iade hatası (Ürün ID: " + item.getId() + "): " + iyzicoRefund.getErrorMessage());
+                            "Iyzico refund error (Product ID: " + item.getId() + "): " + iyzicoRefund.getErrorMessage());
                 }
             }
         }
@@ -282,15 +281,15 @@ public class OrderService {
     @Transactional
     public OrderItem refundOrderItem(Long orderItemId) {
         OrderItem item = orderItemRepository.findById(orderItemId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ürün kalemi bulunamadı"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order item not found"));
 
         if ("REFUNDED".equals(item.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bu ürün zaten iade edilmiş.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This product has already been refunded.");
         }
 
         if (item.getPaymentTransactionId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Bu ürün için iade kimliği (TransactionId) bulunmuyor.");
+                    "No refund ID (TransactionId) found for this product.");
         }
 
         BigDecimal refundSum = item.getPriceAtOrder().multiply(BigDecimal.valueOf(item.getQuantity()));
@@ -299,7 +298,7 @@ public class OrderService {
 
         if (!"success".equals(iyzicoRefund.getStatus())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Iyzico iade hatası: " + iyzicoRefund.getErrorMessage());
+                    "Iyzico refund error: " + iyzicoRefund.getErrorMessage());
         }
 
         item.setStatus("REFUNDED");

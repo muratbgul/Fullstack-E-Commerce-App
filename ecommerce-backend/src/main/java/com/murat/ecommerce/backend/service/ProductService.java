@@ -21,7 +21,7 @@ public class ProductService {
 
     @Cacheable("products")
     public List<Product> getAllProducts() {
-        log.info("********** [DB] ÜRÜNLER VERİ TABANINDAN ÇEKİLİYOR **********");
+        log.info("********** [DB] FETCHING PRODUCTS FROM DATABASE **********");
         return productRepository.findAllByStatus("ACTIVE");
     }
 
@@ -39,7 +39,7 @@ public class ProductService {
     public Product updateProduct(Long id, Product updatedProduct) {
         Product existingProduct = productRepository.findByIdAndStatus(id, "ACTIVE")
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
-                        org.springframework.http.HttpStatus.NOT_FOUND, "Ürün bulunamadı"));
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Product not found"));
         
         existingProduct.setName(updatedProduct.getName());
         existingProduct.setPrice(updatedProduct.getPrice());
@@ -52,7 +52,7 @@ public class ProductService {
     public void deleteProduct(Long id) {
         Product existingProduct = productRepository.findByIdAndStatus(id, "ACTIVE")
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
-                        org.springframework.http.HttpStatus.NOT_FOUND, "Ürün bulunamadı"));
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Product not found"));
         
         existingProduct.setStatus("DELETED");
         productRepository.save(existingProduct);

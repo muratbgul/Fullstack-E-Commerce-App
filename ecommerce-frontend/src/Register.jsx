@@ -1,7 +1,8 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { buildApiUrl } from './utils/apiUtils';
 
-const REGISTER_API = 'http://localhost:8081/auth/register';
+const REGISTER_API = buildApiUrl('/auth/register');
 
 
 
@@ -24,15 +25,15 @@ function Register() {
       });
 
       if (response.ok) {
-        setToast({ message: 'Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz...', type: 'success' });
+        setToast({ message: 'Registration successful! Redirecting to login page...', type: 'success' });
         setTimeout(() => navigate('/login'), 1500);
         return;
       }
 
-      setToast({ message: 'Kayıt başarısız oldu: ' + response.status, type: 'error' });
+      setToast({ message: 'Registration failed: ' + response.status, type: 'error' });
       setTimeout(() => setToast(null), 3000);
     } catch (err) {
-      setToast({ message: 'Bağlantı hatası: ' + err.message, type: 'error' });
+      setToast({ message: 'Connection error: ' + err.message, type: 'error' });
       setTimeout(() => setToast(null), 3000);
     } finally {
       setLoading(false);
